@@ -1,0 +1,85 @@
+<script>
+  const aliBtn = document.getElementById("ali");
+  const msg = document.getElementById("msg");
+  const runners = Array.from(document.querySelectorAll(".runner"));
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function moveAway(el, mouseX, mouseY){
+    // current button center
+    const r = el.getBoundingClientRect();
+    const bx = r.left + r.width / 2;
+    const by = r.top  + r.height / 2;
+
+    // direction away from cursor
+    let dx = bx - mouseX;
+    let dy = by - mouseY;
+    const len = Math.hypot(dx, dy) || 1;
+    dx /= len; dy /= len;
+
+    // tune these if you want
+    const fleeDistance = 200;
+    const jitter = 70;
+    const margin = 10;
+
+    // propose a new center position
+    const targetCenterX = bx + dx * fleeDistance + (Math.random()*jitter - jitter/2);
+    const targetCenterY = by + dy * fleeDistance + (Math.random()*jitter - jitter/2);
+
+    // clamp so it stays fully on-screen
+    const newLeft = clamp(targetCenterX - r.width/2, margin, window.innerWidth  - r.width  - margin);
+    const newTop  = clamp(targetCenterY - r.height/2, margin, window.innerHeight - r.height - margin);
+
+    el.style.position = "fixed";
+    el.style.left = newLeft + "px";
+    el.style.top  = newTop + "px";
+    el.style.zIndex = 999;
+  }
+
+  // Run away when cursor is near (but never leave screen)
+  window.addEventListener("mousemove", (e) => {
+    runners.forEach(btn => {
+      const r = btn.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if(dist < 140){
+        moveAway(btn, e.clientX, e.clientY);
+      }
+    });
+  });
+
+  // Also run away if clicked
+  runners.forEach(btn => {
+    btn.addEventListener("click", (e) => moveAway(btn, e.clientX, e.clientY));
+  });
+
+  // Confetti on Ali
+  aliBtn.addEventListener("click", () => {
+    msg.style.display = "block";
+    aliBtn.textContent = "Ali ✅";
+    confetti();
+  });
+
+  function confetti(){
+    for(let i=0;i<140;i++){
+      const p = document.createElement("div");
+      p.style.position="fixed";
+      p.style.width="8px";
+      p.style.height="8px";
+      p.style.background=`hsl(${Math.random()*360},100%,60%)`;
+      p.style.left=Math.random()*100+"vw";
+      p.style.top="-10px";
+      p.style.opacity=1;
+      p.style.transition="transform 2.2s linear, opacity 2.2s";
+      document.body.appendChild(p);
+
+      setTimeout(()=>{
+        p.style.transform=`translateY(${window.innerHeight + 30}px) rotate(${Math.random()*720}deg)`;
+        p.style.opacity=0;
+      },10);
+
+      setTimeout(()=>p.remove(),2300);
+    }
+  }
+</script>
